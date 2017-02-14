@@ -306,9 +306,9 @@ def OnCommandRecieved() {
 	return
 }
 
-def StoreLastEvent(command, userName, playerName, playerIP, mediaType) {
+def StoreLastEvent(command, userName, playerName, playerIP, mediaType, mediaName) {
 
-	state.lastEvent = " User Name: $userName \n Player Name: $playerName \n IP Address: $playerIP \n Command: $command \n Media Type: $mediaType"
+	state.lastEvent = " User Name: $userName \n Player Name: $playerName \n IP Address: $playerIP \n Command: $command \n Media Type: $mediaType \n Media Name: $mediaName"
 	return
 }
 
@@ -395,6 +395,7 @@ def pageMediaSettings(){
 			options: ['movie', 'episode', 'clip', 'track']
         	input "disabled", "capability.switch", title: "Switch to disable when On", required: false, multiple: false
             input "activeMode", "mode", title: "Only run in selected modes", multiple: true, required:false
+            input(name: "excludeTitle", type: "text", title: "Media title to exclude", required:false)
         }
 	}
 }
@@ -423,6 +424,7 @@ def plexWebHookHandler(){
 	def playerName = plexJSON.Player.title
     def playerIP = plexJSON.Player.publicAddress
 	def mediaType = plexJSON.Metadata.type
+    def mediaName = plexJSON.Metadata.title
     // change command to right format
     switch(plexJSON.event) {
 		case ["media.play","media.resume"]:		command = "onplay"; 	break;
@@ -432,15 +434,15 @@ def plexWebHookHandler(){
     }
     // send to child apps
     childApps.each { child ->
-    	child.AppCommandRecieved(command, userName, playerName, playerIP, mediaType)
+    	child.AppCommandRecieved(command, userName, playerName, playerIP, mediaType, mediaName)
     }
 
 }
 
-def AppCommandRecieved(command, userName, playerName, playerIP, mediaType) {
+def AppCommandRecieved(command, userName, playerName, playerIP, mediaType, mediaName) {
 
 //Log last event
-	parent.StoreLastEvent(command, userName, playerName, playerIP, mediaType)
+	parent.StoreLastEvent(command, userName, playerName, playerIP, mediaType, mediaName)
 	
 //Check if room found
 	def allowedDevs = ["*", "$playerIP", "$playerName", "$userName"]
@@ -460,6 +462,9 @@ def AppCommandRecieved(command, userName, playerName, playerIP, mediaType) {
 		def mediaTypeFound = mediaTypeOk.find { item -> item == mediaType}
     	if(mediaTypeFound == null) {logWriter ("Match NOT found for media type: ${mediaType}"); return}
 	}
+    
+// Check if Media is excluded
+	if(mediaName == excludeTitle) {logWriter ("Skip for media: ${mediaName}"); return}
     
 //Translate play to pause if bTreatTrailersAsPause is enabled for this room
     if(settings?.bTreatTrailersAsPause1 && mediaType == "clip" && command == "onplay") {command = "onpause"}
