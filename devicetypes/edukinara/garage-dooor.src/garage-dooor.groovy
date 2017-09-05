@@ -48,11 +48,11 @@ def push(String vals) {
 	}
     
 	if (vals == "open") {
-    	httpGet("http://garage.jevenet.com:8086/?x10command=DEVICE~sendplc~%22${device.deviceNetworkId}%20$on%22", successClosure)
+    	httpGet("http://garage.jevenet.com:8086/?x10command=DEVICE~sendplc~%22${device.deviceNetworkId}%20on%22", successClosure)
         log.debug "Val: on"
     }
     else {
-    	httpGet("http://garage.jevenet.com:8086/?x10command=DEVICE~sendplc~%22${device.deviceNetworkId}%20$off%22", successClosure)
+    	httpGet("http://garage.jevenet.com:8086/?x10command=DEVICE~sendplc~%22${device.deviceNetworkId}%20off%22", successClosure)
         log.debug "Val: off"
     }
 }
